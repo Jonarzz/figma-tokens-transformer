@@ -8,9 +8,9 @@ const LICENCE_KEY_REGEXP = /([A-Z0-9]{8}-){3}[A-Z0-9]{8}/;
 const URL = 'https://j9zvjtvpx7.execute-api.eu-central-1.amazonaws.com/tokens';
 const ZIP_FILE = 'less.zip';
 
-const transform = async (config) => {
+const transform = async (config, secrets) => {
+  const {license: {key, email}} = secrets;
   const {
-    license: {key, email},
     source: {tokensFile},
     target: {lessDir},
   } = config;
@@ -39,7 +39,9 @@ const transform = async (config) => {
   fs.unlinkSync(ZIP_FILE);
 };
 
-const configureUsingWizard = configFile => {
+const savePrettyPrinted = (file, object) => fs.writeFileSync(file, JSON.stringify(object, null, 2));
+
+const configureUsingWizard = (configFile, secretsFile) => {
   inquirer.prompt([{
             type: 'input',
             name: 'licenseKey',
@@ -64,35 +66,41 @@ const configureUsingWizard = configFile => {
             message: 'Relative path to the target directory where less files should be saved in',
           }])
           .then(({licenseKey, licenseEmail, tokensFile, lessDir}) => {
-            fs.writeFileSync(configFile, JSON.stringify({
+            console.log(`${secretsFile} contains sensitive data - it is recommended not to commit it`);
+            savePrettyPrinted(secretsFile, {
               license: {
                 key: licenseKey,
                 email: licenseEmail
-              },
-              source: {
-                tokensFile
-              },
-              target: {
-                lessDir
               }
-            }, null, 2));
+            });
+            savePrettyPrinted(configFile, {
+              source: { tokensFile },
+              target: { lessDir }
+            });
+            if (!fs.existsSync(tokensFile)) {
+              fs.mkdirSync(tokensFile.replace(/\/[^/]+$/, ''), {recursive: true});
+              fs.writeFileSync(tokensFile, '', {encoding: 'utf-8'});
+            }
+            if (!fs.existsSync(lessDir)) {
+              fs.mkdirSync(lessDir, {recursive: true});
+            }
           });
 };
 
-const configure = configFile => {
-  if (fs.existsSync(configFile)) {
+const configure = (configFile, secretsFile) => {
+  if (fs.existsSync(configFile) || fs.existsSync(secretsFile)) {
     inquirer.prompt([{
       type: 'confirm',
       name: 'override',
-      message: 'Config file already exists, override?',
+      message: 'Config files already exist, override?',
       default: false,
     }]).then(({override}) => {
       if (override) {
-        configureUsingWizard(configFile);
+        configureUsingWizard(configFile, secretsFile);
       }
     });
   } else {
-    configureUsingWizard(configFile);
+    configureUsingWizard(configFile, secretsFile);
   }
 };
 
