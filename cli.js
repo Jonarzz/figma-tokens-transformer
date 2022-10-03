@@ -40,7 +40,7 @@ const COMMANDS = {
     const secrets = secretsInEnv ? {license: {key: LICENSE_KEY, email: LICENSE_EMAIL}}
                                  : JSON.parse(fs.readFileSync(SECRETS_FILE, 'utf-8'));
     transform(config, secrets)
-      .catch(error => console.error('Transformation error: ', error));
+      .catch(error => console.error('Transformation error! ' + error));
   },
   configure: () => {
     configure(CONFIG_FILE, SECRETS_FILE);

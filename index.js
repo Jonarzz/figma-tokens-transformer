@@ -16,7 +16,7 @@ const transform = async (config, secrets) => {
   } = config;
   const url = config.internal?.url || URL;
 
-  console.log(`Transforming ${tokensFile} file`);
+  console.log(`Transforming ${tokensFile} file...`);
   const tokensFileContent = fs.readFileSync(tokensFile, {encoding: 'utf-8'});
   const body = JSON.stringify(JSON.parse(tokensFileContent));
   const response = await fetch(url, {
@@ -28,6 +28,9 @@ const transform = async (config, secrets) => {
     },
   });
   const status = response.status;
+  if (403 === status) {
+    throw 'Authorization failed. Verify your license key and email.';
+  }
   if (status >= 300) {
     throw 'Response status: ' + status;
   }

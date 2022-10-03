@@ -1,6 +1,6 @@
 {
   "name": "figma-tokens-transformer",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Tool transforming Ant Design for Figma tokens to less files",
   "bin": "./cli.js",
   "scripts": {
