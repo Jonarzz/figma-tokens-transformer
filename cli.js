@@ -15,7 +15,7 @@ if (!commandName) {
 }
 
 const logMissingConfiguration = (filename, envVariables) => console.log(
-  `Config file: ${filename} need to be created.\n`
+  `Config file: ${filename} needs to be created.\n`
   + `Use this command: npx figma-tokens-transformer configure\n`
   + `or create the file yourself (see the docs).\n`
   + `You can also use environment variables (useful in CI):\n`

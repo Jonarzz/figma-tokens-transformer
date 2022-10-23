@@ -5,7 +5,7 @@ const inquirer = require('inquirer');
 
 const LICENCE_KEY_REGEXP = /([A-Z0-9]{8}-){3}[A-Z0-9]{8}/;
 
-const URL = 'https://j9zvjtvpx7.execute-api.eu-central-1.amazonaws.com/tokens';
+const URL = 'https://gp0k29hbna.execute-api.eu-central-1.amazonaws.com/tokens';
 const ZIP_FILE = 'less.zip';
 
 const transform = async (config, secrets) => {
@@ -28,6 +28,10 @@ const transform = async (config, secrets) => {
     },
   });
   const status = response.status;
+  if (404 === status) {
+    throw `Invalid transformation URL. `
+          + `Make sure you're using the newest version of figma-tokens-transformer - run 'npm install' command.`;
+  }
   if (403 === status) {
     throw 'Authorization failed. Verify your license key and email.';
   }
