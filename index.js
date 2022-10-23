@@ -30,7 +30,9 @@ const transform = async (config, secrets) => {
   const status = response.status;
   if (404 === status) {
     throw `Invalid transformation URL. `
-          + `Make sure you're using the newest version of figma-tokens-transformer - run 'npm install' command.`;
+          + `Make sure you're using the newest version of figma-tokens-transformer. `
+          + `Run 'npm update figma-tokens-transformer' command to download the newest version `
+          + `and use 'npm outdated' command to find outdated dependencies.`;
   }
   if (403 === status) {
     throw 'Authorization failed. Verify your license key and email.';
