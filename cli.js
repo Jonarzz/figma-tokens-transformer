@@ -8,20 +8,6 @@ const SECRETS_FILENAME = 'tokens-transformer.secret.json';
 const CONFIG_FILE = process.env.PWD + '/' + CONFIG_FILENAME;
 const SECRETS_FILE = process.env.PWD + '/' + SECRETS_FILENAME;
 
-const commandName = process.argv[2];
-
-if (!commandName) {
-  throw 'Command name parameter is required!';
-}
-
-const logMissingConfiguration = (filename, envVariables) => console.log(
-  `Config file: ${filename} needs to be created.\n`
-  + `Use this command: npx figma-tokens-transformer configure\n`
-  + `or create the file yourself (see the docs).\n`
-  + `You can also use environment variables (useful in CI):\n`
-  + envVariables,
-);
-
 const COMMANDS = {
   transform: () => {
     const {LICENSE_KEY, LICENSE_EMAIL, SOURCE_FILE, TARGET_DIR} = process.env;
@@ -35,10 +21,10 @@ const COMMANDS = {
       logMissingConfiguration(CONFIG_FILENAME, 'SOURCE_FILE, TARGET_DIR');
       return;
     }
-    const config = configInEnv ? {source: {tokensFile: SOURCE_FILE}, target: {lessDir: TARGET_DIR}}
-                               : JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
+    const config = configInEnv ? {source: {tokensFile: SOURCE_FILE}, target: {lessDir: TARGET_DIR, jsonsDir: TARGET_DIR}}
+      : JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
     const secrets = secretsInEnv ? {license: {key: LICENSE_KEY, email: LICENSE_EMAIL}}
-                                 : JSON.parse(fs.readFileSync(SECRETS_FILE, 'utf-8'));
+      : JSON.parse(fs.readFileSync(SECRETS_FILE, 'utf-8'));
     transform(config, secrets)
       .catch(error => console.error('Transformation error! ' + error));
   },
@@ -47,8 +33,24 @@ const COMMANDS = {
   },
 };
 
+const AVAILABLE_COMMANDS = Object.keys(COMMANDS).join(', ');
+
+const commandName = process.argv[2];
+
+if (!commandName) {
+  throw `Command name parameter is required (one of: ${AVAILABLE_COMMANDS})`;
+}
+
+const logMissingConfiguration = (filename, envVariables) => console.log(
+  `Config file: ${filename} needs to be created.\n`
+  + `Use this command: npx figma-tokens-transformer configure\n`
+  + `or create the file yourself (see the docs).\n`
+  + `You can also use environment variables (useful in CI):\n`
+  + envVariables,
+);
+
 const command = COMMANDS[commandName];
 if (!command) {
-  throw `Unknown command: ${commandName}, available commands: ${Object.keys(COMMANDS).join(', ')}`;
+  throw `Unknown command: ${commandName}, available commands: ${AVAILABLE_COMMANDS}`;
 }
 command();

@@ -3,18 +3,28 @@ const fetch = require('node-fetch');
 const AdmZip = require('adm-zip');
 const inquirer = require('inquirer');
 
-const LICENCE_KEY_REGEXP = /([A-Z0-9]{8}-){3}[A-Z0-9]{8}/;
+const GUMROAD_KEY_REGEXP = /^([A-Z0-9]{8}-){3}[A-Z0-9]{8}$/;
+const LEMON_KEY_REGEXP = /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/;
+const LICENSE_KEY_REGEXP = new RegExp(GUMROAD_KEY_REGEXP.source + '|' + LEMON_KEY_REGEXP.source);
 
-const URL = 'https://gp0k29hbna.execute-api.eu-central-1.amazonaws.com/tokens';
-const ZIP_FILE = 'less.zip';
+const V4_URL = 'https://gp0k29hbna.execute-api.eu-central-1.amazonaws.com/tokens';
+const V5_URL = ' https://rr49g4zy8d.execute-api.eu-central-1.amazonaws.com/tokens';
+const ZIP_FILE = 'tokens.zip';
+
+// noinspection EqualityComparisonWithCoercionJS
+const isV5 = version => 5 == version;
 
 const transform = async (config, secrets) => {
   const {license: {key, email}} = secrets;
   const {
+    version,
     source: {tokensFile},
-    target: {lessDir},
+    target: {lessDir, jsonsDir},
   } = config;
-  const url = config.internal?.url || URL;
+  if (isV5(version)) {
+    console.log(`Tokens transformer configured for Ant Design v5`);
+  }
+  const url = config.internal?.url || (isV5(version) ? V5_URL : V4_URL);
 
   console.log(`Transforming ${tokensFile} file...`);
   const tokensFileContent = fs.readFileSync(tokensFile, {encoding: 'utf-8'});
@@ -44,7 +54,8 @@ const transform = async (config, secrets) => {
   const data = await response.text();
   fs.writeFileSync(ZIP_FILE, data, {encoding: 'base64'});
   const zip = new AdmZip(ZIP_FILE, {});
-  zip.extractAllTo(lessDir, true, true);
+  const targetDir = isV5(version) ? jsonsDir : lessDir;
+  zip.extractAllTo(targetDir, true, true);
   fs.unlinkSync(ZIP_FILE);
 };
 
@@ -56,7 +67,7 @@ const configureUsingWizard = (configFile, secretsFile) => {
             name: 'licenseKey',
             message: 'License key',
             validate: value => {
-              if (value.match(LICENCE_KEY_REGEXP)) {
+              if (value.match(LICENSE_KEY_REGEXP)) {
                 return true;
               }
               return 'Invalid licence key format';
@@ -65,16 +76,31 @@ const configureUsingWizard = (configFile, secretsFile) => {
             type: 'input',
             name: 'licenseEmail',
             message: 'License email',
+            validate: value => /\S+@\S+\.\S+/.test(value) || 'Invalid email'
+          }, {
+            type: 'list',
+            name: 'version',
+            message: 'Ant Design version',
+            choices: [4, 5]
           }, {
             type: 'input',
             name: 'tokensFile',
             message: 'Relative path to the source tokens file',
+            validate: value => (value?.endsWith('.json'))|| 'Invalid tokens file'
           }, {
             type: 'input',
             name: 'lessDir',
             message: 'Relative path to the target directory where less files should be saved in',
+            when: ({version}) => 5 !== version,
+            validate: value => !!value || 'Invalid target directory'
+          }, {
+            type: 'input',
+            name: 'jsonsDir',
+            message: 'Relative path to the target directory where transformed JSON token files should be saved in',
+            when: ({version}) => 5 === version,
+            validate: value => !!value || 'Target directory cannot be empty'
           }])
-          .then(({licenseKey, licenseEmail, tokensFile, lessDir}) => {
+          .then(({licenseKey, licenseEmail, version, tokensFile, lessDir, jsonsDir}) => {
             console.log(`${secretsFile} contains sensitive data - it is recommended not to commit it`);
             savePrettyPrinted(secretsFile, {
               license: {
@@ -83,15 +109,17 @@ const configureUsingWizard = (configFile, secretsFile) => {
               }
             });
             savePrettyPrinted(configFile, {
+              version,
               source: { tokensFile },
-              target: { lessDir }
+              target: { lessDir, jsonsDir }
             });
             if (!fs.existsSync(tokensFile)) {
               fs.mkdirSync(tokensFile.replace(/\/[^/]+$/, ''), {recursive: true});
               fs.writeFileSync(tokensFile, '', {encoding: 'utf-8'});
             }
-            if (!fs.existsSync(lessDir)) {
-              fs.mkdirSync(lessDir, {recursive: true});
+            const targetDir = lessDir || jsonsDir;
+            if (!fs.existsSync(targetDir)) {
+              fs.mkdirSync(targetDir, {recursive: true});
             }
           });
 };

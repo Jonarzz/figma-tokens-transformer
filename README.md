@@ -35,7 +35,7 @@ It is recommended to configure the tool using the CLI wizard:
 However, it can be also done by hand - config files format
 is shown in the examples below.
 
-*tokens-transformer.config.json*
+*tokens-transformer.config.json* (Ant Design v4)
 ```json
 {
   "source": {
@@ -43,6 +43,19 @@ is shown in the examples below.
   },
   "target": {
     "lessDir": "src/less"
+  }
+}
+```
+
+*tokens-transformer.config.json* (Ant Design v5)
+```json
+{
+  "version": 5,
+  "source": {
+    "tokensFile": "src/tokens/tokens.json"
+  },
+  "target": {
+    "jsonsDir": "src/ant-tokens"
   }
 }
 ```
