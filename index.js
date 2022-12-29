@@ -3,8 +3,8 @@ const fetch = require('node-fetch');
 const AdmZip = require('adm-zip');
 const inquirer = require('inquirer');
 
-const GUMROAD_KEY_REGEXP = /^([A-Z0-9]{8}-){3}[A-Z0-9]{8}$/;
-const LEMON_KEY_REGEXP = /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/;
+const GUMROAD_KEY_REGEXP = /^([a-zA-Z0-9]{8}-){3}[a-zA-Z0-9]{8}$/;
+const LEMON_KEY_REGEXP = /^[a-zA-Z0-9]{8}-([a-zA-Z0-9]{4}-){3}[a-zA-Z0-9]{12}$/;
 const LICENSE_KEY_REGEXP = new RegExp(GUMROAD_KEY_REGEXP.source + '|' + LEMON_KEY_REGEXP.source);
 
 const V4_URL = 'https://gp0k29hbna.execute-api.eu-central-1.amazonaws.com/tokens';
