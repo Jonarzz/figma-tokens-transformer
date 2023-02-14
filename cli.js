@@ -5,8 +5,8 @@ const fs = require('fs');
 
 const CONFIG_FILENAME = 'tokens-transformer.config.json';
 const SECRETS_FILENAME = 'tokens-transformer.secret.json';
-const CONFIG_FILE = process.env.PWD + '/' + CONFIG_FILENAME;
-const SECRETS_FILE = process.env.PWD + '/' + SECRETS_FILENAME;
+const CONFIG_FILE = process.cwd() + '/' + CONFIG_FILENAME;
+const SECRETS_FILE = process.cwd() + '/' + SECRETS_FILENAME;
 
 const COMMANDS = {
   transform: () => {
